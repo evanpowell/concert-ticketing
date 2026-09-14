@@ -33,6 +33,9 @@ public class ShowQueryTests(OracleFixture oracle)
         Assert.Contains(seats, s => s.Section == "A" && s.PriceCents == 8500);
         Assert.Contains(seats, s => s.Section == "B" && s.PriceCents == 6000);
         Assert.All(seats, s => Assert.Contains(s.Status, new[] { "AVAILABLE", "HELD", "SOLD" }));
+        // The hold endpoint takes seatIds, so the seat map must expose them or no
+        // client can construct a hold request.
+        Assert.All(seats, s => Assert.True(s.SeatId > 0));
     }
 
     [Fact]
@@ -61,5 +64,5 @@ public class ShowQueryTests(OracleFixture oracle)
     }
 
     public record ShowSummaryDto(int ShowId, string Title, string Artist, DateTimeOffset StartsAt, string VenueName);
-    public record SeatDto(int ShowSeatId, string Section, string RowLabel, int SeatNumber, string Status, int PriceCents);
+    public record SeatDto(int ShowSeatId, int SeatId, string Section, string RowLabel, int SeatNumber, string Status, int PriceCents);
 }

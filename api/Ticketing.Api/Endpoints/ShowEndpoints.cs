@@ -39,6 +39,7 @@ public static class ShowEndpoints
                 .OrderBy(ss => ss.Seat.Section).ThenBy(ss => ss.Seat.RowLabel).ThenBy(ss => ss.Seat.SeatNumber)
                 .Select(ss => new SeatView(
                     ss.ShowSeatId,
+                    ss.SeatId,
                     ss.Seat.Section,
                     ss.Seat.RowLabel,
                     ss.Seat.SeatNumber,
