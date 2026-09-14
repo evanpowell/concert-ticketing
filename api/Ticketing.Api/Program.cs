@@ -9,6 +9,7 @@ builder.Services.AddDbContext<TicketingDbContext>(options =>
     options.UseOracle(builder.Configuration.GetConnectionString("Ticketing")));
 
 builder.Services.AddScoped<HoldService>();
+builder.Services.AddHostedService<ExpiredHoldSweeper>();
 
 var app = builder.Build();
 
