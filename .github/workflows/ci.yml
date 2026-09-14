@@ -94,7 +94,10 @@ jobs:
           SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          # The trailing newline is required: OpenSSH rejects a PEM without one
+          # with "error in libcrypto", which reads like a corrupt key rather than
+          # a missing byte.
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new \
             ubuntu@"$SERVER_IP" \
