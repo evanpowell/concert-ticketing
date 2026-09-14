@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using Scalar.AspNetCore;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Ticketing.Api.Data;
@@ -13,6 +14,7 @@ builder.Services.AddDbContext<TicketingDbContext>(options =>
 builder.Services.AddScoped<HoldService>();
 builder.Services.AddHostedService<ExpiredHoldSweeper>();
 builder.Services.AddProblemDetails();
+builder.Services.AddOpenApi();
 
 // The public demo has no authentication, so writes are rate limited per client IP.
 builder.Services.AddRateLimiter(options =>
@@ -40,6 +42,13 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseCors();
 app.UseRateLimiter();
+
+// The deployed link should show something usable, so the interactive API
+// reference is served at the root and stays on in production deliberately.
+app.MapOpenApi();
+app.MapScalarApiReference("/", options => options
+    .WithTitle("Concert Ticketing API")
+    .WithTheme(ScalarTheme.Purple));
 
 app.MapHealthEndpoints();
 app.MapShowEndpoints();
