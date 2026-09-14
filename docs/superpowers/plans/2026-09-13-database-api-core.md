@@ -107,6 +107,13 @@ dotnet add Ticketing.Api package Microsoft.EntityFrameworkCore.Design
 dotnet add Ticketing.Tests package Microsoft.AspNetCore.Mvc.Testing
 dotnet add Ticketing.Tests package Testcontainers.Oracle
 dotnet add Ticketing.Tests package Oracle.ManagedDataAccess.Core
+
+# The test project must pin EF Core to the SAME version the API resolves.
+# Oracle.EntityFrameworkCore only requires EF Core >= 10.0.0, so without these
+# the test project picks 10.0.0 while the API uses 10.0.12, and the build fails
+# with CS1705 ("uses a higher version than referenced assembly").
+dotnet add Ticketing.Tests package Microsoft.EntityFrameworkCore --version 10.0.12
+dotnet add Ticketing.Tests package Microsoft.EntityFrameworkCore.Relational --version 10.0.12
 ```
 
 - [ ] **Step 5: Verify the solution builds**
@@ -758,8 +765,10 @@ namespace Ticketing.Tests;
 
 public sealed class OracleFixture : IAsyncLifetime
 {
-    private readonly OracleContainer _container = new OracleBuilder()
-        .WithImage("gvenzl/oracle-free:23-slim-faststart")
+    // Testcontainers 4.15: the parameterless OracleBuilder() is obsolete; the image
+    // goes in the constructor. Verified 2026-09-13 that WithUsername/WithPassword
+    // are honoured by the oracle-free image.
+    private readonly OracleContainer _container = new OracleBuilder("gvenzl/oracle-free:23-slim-faststart")
         .WithUsername("ticketing")
         .WithPassword("ticketing")
         .Build();
@@ -837,7 +846,7 @@ cd /Users/evan/other/ticketing/api && dotnet test --filter Can_connect_and_read_
 
 Expected: PASS. **This will take 1–3 minutes** while Testcontainers pulls and boots Oracle.
 
-If it fails with an authentication error, the Testcontainers Oracle module may not honour `WithUsername` against the `oracle-free` image. Diagnose by printing `oracle.ConnectionString` and connecting manually. The fallback is to drop `WithUsername`/`WithPassword` and use whatever credentials the module's connection string reports — the tests only need *a* working connection.
+**Verified 2026-09-13:** this passes. `WithUsername`/`WithPassword` are honoured by the `oracle-free` image, and the container is genuinely fresh — if it had connected to the local compose instance instead, the migrations would have failed with `ORA-00955` (name already used by an existing object).
 
 - [ ] **Step 9: Write the API factory that points the app at the test container**
 
