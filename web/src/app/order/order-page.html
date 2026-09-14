@@ -1,0 +1,21 @@
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+} @else if (order(); as o) {
+  <h1>You're going</h1>
+  <p class="muted">Order #{{ o.orderId }} · confirmation sent to {{ o.email }}</p>
+
+  <ul class="tickets">
+    @for (ticket of o.tickets; track ticket.ticketId) {
+      <li class="ticket">
+        <span class="seat">Section {{ ticket.section }}, row {{ ticket.rowLabel }}, seat {{ ticket.seatNumber }}</span>
+        <span class="price">{{ ticket.priceCents / 100 | currency: 'USD' }}</span>
+      </li>
+    }
+  </ul>
+
+  <p class="total">Total {{ o.totalCents / 100 | currency: 'USD' }}</p>
+
+  <a routerLink="/shows">Back to shows</a>
+} @else {
+  <p class="muted">Loading…</p>
+}

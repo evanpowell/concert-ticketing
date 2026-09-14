@@ -1,0 +1,23 @@
+<h1>Upcoming shows</h1>
+
+@if (loading()) {
+  <p class="muted">Loading…</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else {
+  <ul class="show-list">
+    @for (show of shows(); track show.showId) {
+      <li class="show-card">
+        <a [routerLink]="['/shows', show.showId]">
+          <span class="artist">{{ show.artist }}</span>
+          <span class="title">{{ show.title }}</span>
+          <span class="meta">
+            {{ show.startsAt | date: 'EEE d MMM, h:mm a' }} · {{ show.venueName }}
+          </span>
+        </a>
+      </li>
+    } @empty {
+      <li class="muted">No shows scheduled.</li>
+    }
+  </ul>
+}

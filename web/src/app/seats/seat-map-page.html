@@ -1,0 +1,56 @@
+<h1>Choose your seats</h1>
+
+<p class="legend">
+  <span class="swatch available"></span> Available
+  <span class="swatch selected"></span> Selected
+  <span class="swatch held"></span> On hold
+  <span class="swatch sold"></span> Sold
+</p>
+
+<div class="stage">STAGE</div>
+
+@for (row of rows(); track row.section + row.rowLabel) {
+  <div class="row">
+    <span class="row-label">{{ row.section }}{{ row.rowLabel }}</span>
+    <div class="seats">
+      @for (seat of row.seats; track seat.showSeatId) {
+        <button
+          type="button"
+          class="seat"
+          [class.is-selected]="isSelected(seat)"
+          [class.is-held]="seat.status === 'HELD'"
+          [class.is-sold]="seat.status === 'SOLD'"
+          [disabled]="seat.status !== 'AVAILABLE'"
+          [attr.aria-pressed]="isSelected(seat)"
+          [attr.aria-label]="seatLabel(seat)"
+          (click)="toggle(seat)">
+          {{ seat.seatNumber }}
+        </button>
+      }
+    </div>
+  </div>
+}
+
+<div class="checkout">
+  <label>
+    Email
+    <input type="email" [value]="email()" (input)="setEmail($event)" />
+  </label>
+
+  <p class="summary">
+    {{ selectedCount() }} seat{{ selectedCount() === 1 ? '' : 's' }} ·
+    {{ selectedTotalCents() / 100 | currency: 'USD' }}
+  </p>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  <button
+    type="button"
+    class="primary"
+    [disabled]="selectedCount() === 0 || submitting()"
+    (click)="hold()">
+    {{ submitting() ? 'Holding…' : 'Hold for 15 minutes' }}
+  </button>
+</div>

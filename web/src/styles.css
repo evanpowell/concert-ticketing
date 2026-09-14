@@ -1,1 +1,41 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg: #0f1115;
+  --surface: #171a21;
+  --surface-2: #1f232c;
+  --text: #e8eaed;
+  --muted: #9aa3b2;
+  --accent: #7c5cff;
+  --available: #2f6f4f;
+  --available-hover: #3d8a63;
+  --selected: #7c5cff;
+  --held: #7a6320;
+  --sold: #3a3f4a;
+  --danger: #d9705f;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--accent); }
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+}
+
+button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+/* Visible focus matters here: the seat map is keyboard navigable. */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}

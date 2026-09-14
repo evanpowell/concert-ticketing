@@ -1,0 +1,25 @@
+<h1>Your seats are held</h1>
+
+@if (expired()) {
+  <p class="expired" role="alert">
+    This hold has expired and the seats have been released.
+  </p>
+  <button type="button" class="primary" (click)="cancel()">Back to shows</button>
+} @else {
+  <p class="countdown" aria-live="polite">{{ countdown() }} remaining</p>
+  <p class="muted">
+    Confirm before the timer runs out, or the seats return to the pool for
+    someone else.
+  </p>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  <div class="actions">
+    <button type="button" class="primary" [disabled]="submitting()" (click)="confirm()">
+      {{ submitting() ? 'Confirming…' : 'Confirm purchase' }}
+    </button>
+    <button type="button" class="secondary" (click)="cancel()">Release seats</button>
+  </div>
+}

@@ -1,0 +1,67 @@
+h1 { font-size: 1.5rem; margin-top: 0; }
+
+.legend { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.85rem; }
+.swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.swatch.available { background: var(--available); }
+.swatch.selected { background: var(--selected); }
+.swatch.held { background: var(--held); }
+.swatch.sold { background: var(--sold); }
+.swatch + .swatch { margin-left: 0.75rem; }
+
+.stage {
+  margin: 1.5rem 0;
+  padding: 0.5rem;
+  text-align: center;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+.row-label { width: 2.5rem; color: var(--muted); font-size: 0.85rem; }
+.seats { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.seat {
+  width: 2.25rem;
+  height: 2.25rem;
+  background: var(--available);
+  color: var(--text);
+  transition: background 120ms ease;
+}
+
+.seat:hover:not(:disabled) { background: var(--available-hover); }
+.seat.is-selected { background: var(--selected); }
+.seat.is-held { background: var(--held); }
+.seat.is-sold { background: var(--sold); }
+
+.checkout {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+
+.checkout input {
+  display: block;
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  background: var(--surface-2);
+  border: 1px solid var(--surface-2);
+  border-radius: var(--radius);
+  color: var(--text);
+  min-width: 18rem;
+}
+
+.summary { margin: 0; color: var(--muted); }
+.error { color: var(--danger); margin: 0; }
+
+.primary {
+  padding: 0.65rem 1.25rem;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+}

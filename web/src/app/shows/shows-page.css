@@ -1,0 +1,21 @@
+h1 { font-size: 1.5rem; margin-top: 0; }
+.muted { color: var(--muted); }
+.error { color: var(--danger); }
+
+.show-list { list-style: none; padding: 0; display: grid; gap: 0.75rem; }
+
+.show-card a {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--surface-2);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+}
+
+.show-card a:hover { border-color: var(--accent); }
+.artist { font-weight: 600; font-size: 1.1rem; }
+.title { color: var(--muted); }
+.meta { color: var(--muted); font-size: 0.9rem; }

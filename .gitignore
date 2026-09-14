@@ -10,3 +10,5 @@ infra/*.tfstate
 infra/*.tfstate.*
 infra/terraform.tfvars
 *.pem
+web/dist/
+web/.angular/
