@@ -123,7 +123,7 @@ Expected: `Build succeeded`. Warnings are acceptable; errors are not.
 grep -i 'xunit' Ticketing.Tests/Ticketing.Tests.csproj
 ```
 
-If you see `xunit.v3`, `IAsyncLifetime.InitializeAsync` returns `ValueTask`. If you see plain `xunit` (v2), it returns `Task`. **Task 4 shows the v3 form** — if you have v2, change `ValueTask` to `Task` and `DisposeAsync` accordingly. Record which you have; it affects only `OracleFixture.cs`.
+**Verified on 2026-09-13:** this produces xUnit **v2 (2.9.3)**, whose `IAsyncLifetime` methods return `Task`. Task 4's fixture is written for that. If a future SDK gives you `xunit.v3` instead, change both `Task` returns to `ValueTask` in `OracleFixture.cs` — nothing else is affected.
 
 - [ ] **Step 7: Commit**
 
@@ -766,15 +766,16 @@ public sealed class OracleFixture : IAsyncLifetime
 
     public string ConnectionString { get; private set; } = "";
 
-    // xUnit v3 signature. On xUnit v2 change ValueTask -> Task on both methods.
-    public async ValueTask InitializeAsync()
+    // Verified 2026-09-13: `dotnet new xunit` on .NET 10 gives xUnit v2 (2.9.3),
+    // whose IAsyncLifetime returns Task (v3 would return ValueTask).
+    public async Task InitializeAsync()
     {
         await _container.StartAsync();
         ConnectionString = _container.GetConnectionString();
         await MigrationRunner.ApplyAsync(ConnectionString, MigrationRunner.FindMigrationsDirectory());
     }
 
-    public async ValueTask DisposeAsync() => await _container.DisposeAsync();
+    public async Task DisposeAsync() => await _container.DisposeAsync();
 }
 
 [CollectionDefinition(nameof(OracleCollection))]
