@@ -82,6 +82,33 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # A deploy job belongs here once a VM exists. It is deliberately absent rather
-  # than present-and-skipped: a workflow that always shows a skipped deploy step
-  # is harder to read than one that gains the step when it becomes real.
+  deploy:
+    name: Deploy
+    needs: image
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Pull the new image and restart the API
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new \
+            ubuntu@"$SERVER_IP" \
+            'cd /opt/ticketing && docker compose -f compose.prod.yaml pull api && docker compose -f compose.prod.yaml up -d api'
+
+      # Without this a deploy that starts a broken container still reports green.
+      - name: Verify the deployment is healthy
+        run: |
+          for i in $(seq 1 30); do
+            body=$(curl -sf --max-time 10 "${{ vars.PUBLIC_URL }}/health" || true)
+            case "$body" in
+              *'"database":true'*) echo "healthy: $body"; exit 0 ;;
+            esac
+            sleep 5
+          done
+          echo "deployment did not become healthy"
+          exit 1

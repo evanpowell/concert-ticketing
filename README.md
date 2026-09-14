@@ -2,6 +2,9 @@
 
 [![ci](https://github.com/evanpowell/concert-ticketing/actions/workflows/ci.yml/badge.svg)](https://github.com/evanpowell/concert-ticketing/actions/workflows/ci.yml)
 
+**Live demo: https://163.192.207.33.nip.io** — running on Oracle Cloud, Ampere Arm.
+Open it in two browser windows and race for the same seat.
+
 A seat-booking application built on **Angular · ASP.NET Core · Oracle**, written to
 solve one problem properly: two people clicking the same seat at the same instant.
 
@@ -19,6 +22,8 @@ doesn't, and the difference is visible, testable, and worth arguing about.
 Everything here exists to make that problem real and then solve it.
 
 ## Try it
+
+The live demo is above. To run it yourself:
 
 ```bash
 docker compose up

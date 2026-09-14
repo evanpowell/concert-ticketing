@@ -1,0 +1,26 @@
+name: keepalive
+
+# OCI reclaims idle free-tier resources, and a link on a resume is clicked months
+# after it is written. /health touches the database, so this keeps both the VM and
+# Oracle looking active.
+#
+# NOTE: GitHub disables scheduled workflows after 60 days of repository
+# inactivity — exactly the scenario this exists for. Treat it as one layer; an
+# external uptime monitor is the second.
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health
+        run: |
+          body=$(curl -sf --max-time 20 "${{ vars.PUBLIC_URL }}/health")
+          echo "health: $body"
+          case "$body" in
+            *'"database":true'*) exit 0 ;;
+            *) echo "unexpected health response"; exit 1 ;;
+          esac
