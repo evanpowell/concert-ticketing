@@ -114,6 +114,39 @@ public sealed class HoldService(TicketingDbContext db)
         }
     }
 
+    public async Task<ReleaseOutcome> ReleaseHoldAsync(int holdId, CancellationToken ct)
+    {
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        try
+        {
+            var hold = await db.SeatHolds.FirstOrDefaultAsync(h => h.HoldId == holdId, ct);
+            if (hold is null)
+                return new ReleaseOutcome.HoldNotFound();
+
+            if (hold.Status != HoldStatus.Active)
+                return new ReleaseOutcome.HoldNoLongerActive();
+
+            var seats = await LockSeatsOfHoldAsync(holdId, ct);
+            foreach (var seat in seats)
+            {
+                seat.Status = SeatStatus.Available;
+                seat.HoldId = null;
+                seat.ExpiresAt = null;
+            }
+
+            hold.Status = HoldStatus.Released;
+            await db.SaveChangesAsync(ct);
+
+            await tx.CommitAsync(ct);
+            return new ReleaseOutcome.Released();
+        }
+        catch (OracleException ex) when (ex.Number == OracleResourceBusy)
+        {
+            await tx.RollbackAsync(ct);
+            return new ReleaseOutcome.HoldNoLongerActive();
+        }
+    }
+
     private async Task<List<ShowSeat>> LockSeatsOfHoldAsync(int holdId, CancellationToken ct) =>
         await db.ShowSeats.FromSqlRaw(
             """

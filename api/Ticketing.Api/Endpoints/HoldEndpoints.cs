@@ -37,5 +37,18 @@ public static class HoldEndpoints
                     Results.Problem(statusCode: 410, title: "This hold has expired or was already used"),
             };
         });
+
+        app.MapDelete("/api/holds/{holdId:int}", async (
+            int holdId, HoldService holds, CancellationToken ct) =>
+        {
+            var outcome = await holds.ReleaseHoldAsync(holdId, ct);
+
+            return outcome switch
+            {
+                ReleaseOutcome.Released => Results.NoContent(),
+                ReleaseOutcome.HoldNotFound => Results.Problem(statusCode: 404, title: "Hold not found"),
+                _ => Results.Problem(statusCode: 410, title: "This hold is no longer active"),
+            };
+        });
     }
 }
