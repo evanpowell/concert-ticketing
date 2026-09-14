@@ -60,6 +60,70 @@ public sealed class HoldService(TicketingDbContext db)
         }
     }
 
+    public async Task<ConfirmOutcome> ConfirmHoldAsync(int holdId, CancellationToken ct)
+    {
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        try
+        {
+            var hold = await db.SeatHolds.FirstOrDefaultAsync(h => h.HoldId == holdId, ct);
+            if (hold is null)
+                return new ConfirmOutcome.HoldNotFound();
+
+            var now = await CurrentDatabaseTimeAsync(ct);
+            if (hold.Status != HoldStatus.Active || hold.ExpiresAt <= now)
+                return new ConfirmOutcome.HoldNoLongerActive();
+
+            var seats = await LockSeatsOfHoldAsync(holdId, ct);
+            if (seats.Count == 0)
+                return new ConfirmOutcome.HoldNoLongerActive();
+
+            var order = new CustomerOrder
+            {
+                HoldId = hold.HoldId,
+                Email = hold.Email,
+                TotalCents = seats.Sum(s => s.PriceCents),
+                CreatedAt = now,
+            };
+            db.Orders.Add(order);
+            await db.SaveChangesAsync(ct);   // assigns order.OrderId
+
+            foreach (var seat in seats)
+            {
+                db.Tickets.Add(new Ticket
+                {
+                    OrderId = order.OrderId,
+                    ShowSeatId = seat.ShowSeatId,
+                    PriceCents = seat.PriceCents,
+                });
+
+                seat.Status = SeatStatus.Sold;
+                seat.HoldId = null;        // ck_held_consistency requires this
+                seat.ExpiresAt = null;
+            }
+
+            hold.Status = HoldStatus.Confirmed;
+            await db.SaveChangesAsync(ct);
+
+            await tx.CommitAsync(ct);
+            return new ConfirmOutcome.Confirmed(order.OrderId);
+        }
+        catch (OracleException ex) when (ex.Number == OracleResourceBusy)
+        {
+            await tx.RollbackAsync(ct);
+            return new ConfirmOutcome.HoldNoLongerActive();
+        }
+    }
+
+    private async Task<List<ShowSeat>> LockSeatsOfHoldAsync(int holdId, CancellationToken ct) =>
+        await db.ShowSeats.FromSqlRaw(
+            """
+            SELECT * FROM show_seat
+             WHERE hold_id = :holdId
+             ORDER BY show_seat_id
+               FOR UPDATE NOWAIT
+            """,
+            new OracleParameter("holdId", holdId)).ToListAsync(ct);
+
     /// <summary>
     /// A seat is claimable when it is available, or when it is held by a hold that
     /// has already expired. This is the authoritative expiry check: it happens

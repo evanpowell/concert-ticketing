@@ -21,5 +21,21 @@ public static class HoldEndpoints
                     Results.Problem(statusCode: 409, title: "One or more seats are no longer available"),
             };
         });
+
+        app.MapPost("/api/holds/{holdId:int}/confirm", async (
+            int holdId, HoldService holds, CancellationToken ct) =>
+        {
+            var outcome = await holds.ConfirmHoldAsync(holdId, ct);
+
+            return outcome switch
+            {
+                ConfirmOutcome.Confirmed c =>
+                    Results.Created($"/api/orders/{c.OrderId}", new { orderId = c.OrderId }),
+                ConfirmOutcome.HoldNotFound =>
+                    Results.Problem(statusCode: 404, title: "Hold not found"),
+                _ =>
+                    Results.Problem(statusCode: 410, title: "This hold has expired or was already used"),
+            };
+        });
     }
 }
