@@ -170,57 +170,6 @@ DDL is usually script-owned, and scripts are honest about Oracle-specific DDL.
 
 ---
 
-## Two things that cost me an afternoon
-
-Worth writing down, because neither is in the tutorials.
-
-### `ORA-12704: character set mismatch`
-
-The seat map returned 500. The generated SQL:
-
-```sql
-CASE WHEN ... THEN N'AVAILABLE' ELSE "s"."STATUS" END
-```
-
-EF maps CLR `string` to Unicode and emits `N'...'` literals. The columns are
-`VARCHAR2`. Oracle requires every branch of a `CASE` to share a character set, so
-it rejected the expression.
-
-The tempting fix is removing the `CASE`. That would have been a symptom fix — the
-mismatch survives everywhere else, and **in a `WHERE` clause it doesn't error at
-all**: it silently converts and stops Oracle using the index. The root fix is one
-convention:
-
-```csharp
-builder.Properties<string>().AreUnicode(false);
-```
-
-### A migration runner that could never migrate anything
-
-My first version detected "already applied" by catching `ORA-00955` on the first
-`CREATE TABLE`:
-
-```csharp
-catch (OracleException ex) when (ex.Number == ObjectAlreadyExists)
-{
-    return false;   // ← on ANY existing database, skips EVERY migration
-}
-```
-
-On a fresh database this works perfectly, which is why every test passed. On a
-database that already exists — that is, every deployed one — it bailed on the first
-statement and no migration could ever be applied again. A schema change would have
-worked locally, passed CI, and silently never reached production.
-
-Now migrations are tracked in a `SCHEMA_VERSION` table, with tests covering both
-"a new migration reaches an already-migrated database" and "re-running doesn't
-duplicate seed data."
-
-The lesson I took from it: tests that only ever run against a freshly created
-database cannot tell you your migration story works.
-
----
-
 ## Deliberately not here
 
 Each of these is a decision, not an oversight:
