@@ -7,13 +7,14 @@
   <span class="swatch sold"></span> Sold
 </p>
 
-<div class="stage">STAGE</div>
+<div class="seating">
+  <div class="stage">STAGE</div>
 
-@for (row of rows(); track row.section + row.rowLabel) {
-  <div class="row">
-    <span class="row-label">{{ row.section }}{{ row.rowLabel }}</span>
-    <div class="seats">
-      @for (seat of row.seats; track seat.showSeatId) {
+  @for (row of rows(); track row.section + row.rowLabel) {
+    <div class="row">
+      <span class="row-label">{{ row.section }}{{ row.rowLabel }}</span>
+      <div class="seats">
+        @for (seat of row.seats; track seat.showSeatId) {
         <button
           type="button"
           class="seat"
@@ -24,12 +25,13 @@
           [attr.aria-pressed]="isSelected(seat)"
           [attr.aria-label]="seatLabel(seat)"
           (click)="toggle(seat)">
-          {{ seat.seatNumber }}
-        </button>
-      }
+            {{ seat.seatNumber }}
+          </button>
+        }
+      </div>
     </div>
-  </div>
-}
+  }
+</div>
 
 <div class="checkout">
   <label>

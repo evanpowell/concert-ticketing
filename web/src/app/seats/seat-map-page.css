@@ -8,6 +8,15 @@ h1 { font-size: 1.5rem; margin-top: 0; }
 .swatch.sold { background: var(--sold); }
 .swatch + .swatch { margin-left: 0.75rem; }
 
+/* Centre the stage and the rows together as one block, rather than centring each
+   row on its own. Row labels then stay aligned with each other even if a row has
+   a different number of seats. */
+.seating {
+  width: fit-content;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
 .stage {
   margin: 1.5rem 0;
   padding: 0.5rem;
