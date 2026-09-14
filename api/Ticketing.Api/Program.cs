@@ -10,6 +10,7 @@ builder.Services.AddDbContext<TicketingDbContext>(options =>
 var app = builder.Build();
 
 app.MapHealthEndpoints();
+app.MapShowEndpoints();
 
 app.Run();
 

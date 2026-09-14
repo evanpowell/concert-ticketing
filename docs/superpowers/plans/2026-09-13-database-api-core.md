@@ -22,7 +22,16 @@ Four things about this stack are non-obvious and cause most of the early confusi
 
 3. **`FOR UPDATE NOWAIT` fails loudly on purpose.** When another transaction holds the lock, Oracle raises `ORA-00054` immediately rather than waiting. That is the desired behaviour — we catch it and return 409. Code that "handles" it by retrying would defeat the design.
 
-4. **Time comes from the database, not the API process.** Hold expiry is compared against `SYSTIMESTAMP` read inside the transaction. If the API used its own clock, clock skew between API and database would produce wrong claimability decisions. This costs one extra round trip and buys correctness.
+4. **CLR `string` is Unicode; your columns are not.** EF maps `string` to
+   NVARCHAR2 by default and emits `N'...'` literals. The schema uses `VARCHAR2`.
+   Oracle requires every branch of a `CASE` to share a character set, so a
+   projection mixing `N'AVAILABLE'` with a `VARCHAR2` column fails with
+   **ORA-12704: character set mismatch**. Worse, in a `WHERE` clause it does not
+   fail — it silently converts and stops the index being used. The fix is one
+   convention in the DbContext (`AreUnicode(false)`), applied model-wide.
+   *(Hit for real on 2026-09-13 in Task 5.)*
+
+5. **Time comes from the database, not the API process.** Hold expiry is compared against `SYSTIMESTAMP` read inside the transaction. If the API used its own clock, clock skew between API and database would produce wrong claimability decisions. This costs one extra round trip and buys correctness.
 
 ## File structure
 
@@ -579,6 +588,17 @@ public class TicketingDbContext(DbContextOptions<TicketingDbContext> options) : 
     public DbSet<SeatHold> SeatHolds => Set<SeatHold>();
     public DbSet<CustomerOrder> Orders => Set<CustomerOrder>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
+
+    /// <summary>
+    /// Every string column in this schema is VARCHAR2 (database character set),
+    /// not NVARCHAR2. EF maps CLR string to Unicode by default and emits N'...'
+    /// literals, which Oracle rejects inside a CASE expression with ORA-12704,
+    /// and which silently defeat index use in a WHERE clause.
+    /// </summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+    {
+        builder.Properties<string>().AreUnicode(false);
+    }
 
     protected override void OnModelCreating(ModelBuilder b)
     {

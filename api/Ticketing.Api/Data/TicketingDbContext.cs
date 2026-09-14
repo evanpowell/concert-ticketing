@@ -13,6 +13,17 @@ public class TicketingDbContext(DbContextOptions<TicketingDbContext> options) : 
     public DbSet<CustomerOrder> Orders => Set<CustomerOrder>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
 
+    /// <summary>
+    /// Every string column in this schema is VARCHAR2 (database character set),
+    /// not NVARCHAR2. EF maps CLR string to Unicode by default and emits N'...'
+    /// literals, which Oracle rejects inside a CASE expression with ORA-12704,
+    /// and which silently defeat index use in a WHERE clause.
+    /// </summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+    {
+        builder.Properties<string>().AreUnicode(false);
+    }
+
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Venue>(e =>
