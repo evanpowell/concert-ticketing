@@ -4,8 +4,11 @@
 # This rotates every availability domain and both viable shapes, preferring the
 # larger one, and stops at the first success.
 #
-# Usage:  ./retry-capacity.sh          (default 5 min between cycles)
-#         INTERVAL=120 ./retry-capacity.sh
+# Usage:  ./retry-capacity.sh                    (5 min between cycles, 24h cap)
+#         INTERVAL=120 MAX_HOURS=8 ./retry-capacity.sh
+#
+# Safe to run detached overnight: it stops at the first success, on any
+# non-capacity error, or when MAX_HOURS elapses.
 set -uo pipefail
 cd "$(dirname "$0")"
 
@@ -17,6 +20,8 @@ ADS=(
 # "ocpus memory_gbs", best first.
 SHAPES=("2 12" "1 6")
 INTERVAL="${INTERVAL:-300}"
+MAX_HOURS="${MAX_HOURS:-24}"
+DEADLINE=$(( $(date +%s) + MAX_HOURS * 3600 ))
 LOG=/tmp/tf-retry-last.log
 
 attempt=0
@@ -30,7 +35,7 @@ while true; do
     for ad in "${ADS[@]}"; do
       attempt=$((attempt + 1))
       printf '[%s] #%d %s %sOCPU/%sGB ... ' \
-        "$(date '+%H:%M:%S')" "$attempt" "${ad##*-CHICAGO-1-}" "$ocpus" "$mem"
+        "$(date '+%m-%d %H:%M:%S')" "$attempt" "${ad##*-CHICAGO-1-}" "$ocpus" "$mem"
 
       if terraform apply -auto-approve -no-color \
            -var "availability_domain=$ad" \
@@ -56,6 +61,10 @@ while true; do
       fi
     done
   done
+  if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+    echo "  reached the ${MAX_HOURS}h limit after $attempt attempts; giving up."
+    exit 2
+  fi
   echo "  cycle $cycle exhausted; sleeping ${INTERVAL}s"
   sleep "$INTERVAL"
 done

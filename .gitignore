@@ -15,3 +15,4 @@ web/.angular/
 
 # Design spec and implementation plans: kept locally, not published.
 docs/superpowers/
+infra/retry-capacity.log
