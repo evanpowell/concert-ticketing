@@ -1,0 +1,5 @@
+tenancy_ocid     = "ocid1.tenancy.oc1..REPLACE"
+user_ocid        = "ocid1.user.oc1..REPLACE"
+fingerprint      = "aa:bb:cc:REPLACE"
+region           = "us-chicago-1"
+compartment_ocid = "ocid1.tenancy.oc1..REPLACE" # same as tenancy_ocid in a fresh account
