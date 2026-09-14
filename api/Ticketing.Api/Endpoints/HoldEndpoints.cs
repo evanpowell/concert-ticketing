@@ -20,7 +20,7 @@ public static class HoldEndpoints
                 _ =>
                     Results.Problem(statusCode: 409, title: "One or more seats are no longer available"),
             };
-        });
+        }).RequireRateLimiting("writes");
 
         app.MapPost("/api/holds/{holdId:int}/confirm", async (
             int holdId, HoldService holds, CancellationToken ct) =>
@@ -36,7 +36,7 @@ public static class HoldEndpoints
                 _ =>
                     Results.Problem(statusCode: 410, title: "This hold has expired or was already used"),
             };
-        });
+        }).RequireRateLimiting("writes");
 
         app.MapDelete("/api/holds/{holdId:int}", async (
             int holdId, HoldService holds, CancellationToken ct) =>
@@ -49,6 +49,6 @@ public static class HoldEndpoints
                 ReleaseOutcome.HoldNotFound => Results.Problem(statusCode: 404, title: "Hold not found"),
                 _ => Results.Problem(statusCode: 410, title: "This hold is no longer active"),
             };
-        });
+        }).RequireRateLimiting("writes");
     }
 }

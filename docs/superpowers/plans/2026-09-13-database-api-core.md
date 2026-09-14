@@ -2210,7 +2210,13 @@ public class ErrorContractTests(OracleFixture oracle)
 cd /Users/evan/other/ticketing/api && dotnet test --filter ErrorContractTests
 ```
 
-Expected: FAIL on the content-type assertion, because `AddProblemDetails` has not been called.
+**Verified 2026-09-13: this test PASSES without any change.** `Results.Problem()`
+on .NET 10 already returns `application/problem+json` on its own, so the
+assertion documents existing behaviour rather than driving new code.
+`AddProblemDetails()` is still worth adding — it is what converts *unhandled
+exceptions* into Problem Details via `UseExceptionHandler` — but it is not what
+makes this test pass. The genuinely new behaviour in this task is rate limiting,
+so `Write_endpoints_are_rate_limited` below is the test that actually fails first.
 
 - [ ] **Step 3: Finalise Program.cs**
 
