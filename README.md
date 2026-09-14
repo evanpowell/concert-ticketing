@@ -275,7 +275,7 @@ api/
   Ticketing.Tests/   integration tests against real Oracle
 web/                 Angular application
 infra/               Terraform for the OCI Always Free deployment
-docs/superpowers/    the design spec and implementation plans
+docs/screenshots/  images used in this README
 ```
 
 Two .NET projects rather than the conventional four (`.Core`, `.Data`,

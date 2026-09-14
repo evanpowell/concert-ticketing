@@ -12,3 +12,6 @@ infra/terraform.tfvars
 *.pem
 web/dist/
 web/.angular/
+
+# Design spec and implementation plans: kept locally, not published.
+docs/superpowers/
