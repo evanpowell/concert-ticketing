@@ -1,14 +1,20 @@
 using Oracle.ManagedDataAccess.Client;
 
-namespace Ticketing.Tests;
+namespace Ticketing.Api.Data;
 
 /// <summary>
-/// Applies db/migrations/*.sql in filename order. Splits on ';', which is why
-/// the migration files must not contain PL/SQL blocks.
+/// Applies db/migrations/*.sql in filename order. Splits on ';', which is why the
+/// migration files must not contain PL/SQL blocks. Safe to run against an empty
+/// schema; against a populated one Oracle raises ORA-00955, which is treated as
+/// "already applied" rather than an error.
 /// </summary>
 public static class MigrationRunner
 {
-    public static async Task ApplyAsync(string connectionString, string migrationsDirectory)
+    /// <summary>ORA-00955: name is already used by an existing object.</summary>
+    private const int ObjectAlreadyExists = 955;
+
+    public static async Task<bool> ApplyAsync(
+        string connectionString, string migrationsDirectory, ILogger? logger = null)
     {
         await using var connection = new OracleConnection(connectionString);
         await connection.OpenAsync();
@@ -19,9 +25,20 @@ public static class MigrationRunner
             {
                 await using var command = connection.CreateCommand();
                 command.CommandText = statement;
-                await command.ExecuteNonQueryAsync();
+                try
+                {
+                    await command.ExecuteNonQueryAsync();
+                }
+                catch (OracleException ex) when (ex.Number == ObjectAlreadyExists)
+                {
+                    logger?.LogInformation("Schema already present; skipping migrations.");
+                    return false;
+                }
             }
         }
+
+        logger?.LogInformation("Migrations applied.");
+        return true;
     }
 
     private static IEnumerable<string> SplitStatements(string sql)
@@ -33,16 +50,5 @@ public static class MigrationRunner
         return withoutComments
             .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Where(s => s.Length > 0 && !s.Equals("COMMIT", StringComparison.OrdinalIgnoreCase));
-    }
-
-    public static string FindMigrationsDirectory()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "db", "migrations")))
-            dir = dir.Parent;
-
-        return dir is null
-            ? throw new DirectoryNotFoundException("Could not locate db/migrations above the test binary.")
-            : Path.Combine(dir.FullName, "db", "migrations");
     }
 }

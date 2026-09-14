@@ -38,6 +38,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// In containers the database starts empty, so the app applies its own schema.
+// Off by default: local development applies migrations explicitly, and a real
+// production database should never be migrated by accident.
+if (app.Configuration.GetValue<bool>("Ticketing:ApplyMigrationsOnStartup"))
+{
+    var connectionString = app.Configuration.GetConnectionString("Ticketing")!;
+    var migrationsDirectory = app.Configuration["Ticketing:MigrationsDirectory"] ?? "/app/migrations";
+    await MigrationRunner.ApplyAsync(connectionString, migrationsDirectory, app.Logger);
+}
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseCors();
