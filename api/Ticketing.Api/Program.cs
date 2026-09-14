@@ -16,6 +16,7 @@ var app = builder.Build();
 app.MapHealthEndpoints();
 app.MapShowEndpoints();
 app.MapHoldEndpoints();
+app.MapOrderEndpoints();
 
 app.Run();
 
