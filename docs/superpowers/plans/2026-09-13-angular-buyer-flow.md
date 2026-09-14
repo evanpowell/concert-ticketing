@@ -1244,11 +1244,14 @@ app.UseStaticFiles();
 and after the endpoint mappings, before `app.Run();`:
 
 ```csharp
-if (Directory.Exists(Path.Combine(app.Environment.WebRootPath ?? "wwwroot", "browser")))
-    app.MapFallbackToFile("browser/index.html");
+if (File.Exists(Path.Combine(app.Environment.WebRootPath ?? "wwwroot", "index.html")))
+    app.MapFallbackToFile("index.html");
 ```
 
-Angular 22 emits to `dist/web/browser/`, hence the `browser` subdirectory.
+The guard matters: the integration tests run the API with no frontend built, and
+an unguarded `MapFallbackToFile` would fail at startup. Verified 2026-09-13 that
+`/nope.js` still returns 404 rather than the app shell — the fallback does not
+swallow missing assets.
 
 **Note:** the Scalar docs UI is mapped at `/`, which would collide with the
 Angular app. Move the docs to `/docs`:
@@ -1286,7 +1289,9 @@ RUN dotnet publish ./Ticketing.Api/Ticketing.Api.csproj -c Release -o /app --no-
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app ./
-COPY --from=web /web/dist/web/ ./wwwroot/
+# Angular emits to dist/web/browser; copy its CONTENTS to the wwwroot root so
+# "/" serves index.html rather than "/browser/index.html".
+COPY --from=web /web/dist/web/browser/ ./wwwroot/
 COPY db/migrations/ ./migrations/
 USER $APP_UID
 EXPOSE 8080

@@ -24,12 +24,12 @@ public class ApiDocsTests(OracleFixture oracle)
     }
 
     [Fact]
-    public async Task Root_serves_the_interactive_docs_ui()
+    public async Task Docs_route_serves_the_interactive_docs_ui()
     {
         using var factory = new ApiFactory(oracle.ConnectionString);
         var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/");
+        var response = await client.GetAsync("/docs");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("text/html", response.Content.Headers.ContentType?.MediaType ?? "");

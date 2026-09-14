@@ -59,8 +59,13 @@ app.UseRateLimiter();
 
 // The deployed link should show something usable, so the interactive API
 // reference is served at the root and stays on in production deliberately.
+// In production the Angular build lives in wwwroot and is served by this same
+// app, so there is one origin and CORS never applies.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapOpenApi();
-app.MapScalarApiReference("/", options => options
+app.MapScalarApiReference("/docs", options => options
     .WithTitle("Concert Ticketing API")
     .WithTheme(ScalarTheme.Purple));
 
@@ -68,6 +73,12 @@ app.MapHealthEndpoints();
 app.MapShowEndpoints();
 app.MapHoldEndpoints();
 app.MapOrderEndpoints();
+
+// Client-side routes like /shows/1 are not files on disk. Without this a refresh
+// on a deep link would 404. Guarded so the API still runs with no frontend built,
+// which is how the integration tests run it.
+if (File.Exists(Path.Combine(app.Environment.WebRootPath ?? "wwwroot", "index.html")))
+    app.MapFallbackToFile("index.html");
 
 app.Run();
 

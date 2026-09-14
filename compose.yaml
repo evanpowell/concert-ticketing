@@ -1,7 +1,13 @@
+# Local development / evaluation stack.
+#   docker compose up --build
+# then open http://localhost:8080
+#
+# Oracle reaches healthy in roughly 40 seconds on first boot; the API waits for it.
 services:
   oracle:
     image: gvenzl/oracle-free:23-slim-faststart
     ports:
+      # Published for sqlplus and for running the test suite from the host.
       - "1521:1521"
     environment:
       ORACLE_PASSWORD: oracle
@@ -15,6 +21,19 @@ services:
       timeout: 5s
       retries: 30
       start_period: 30s
+
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      ConnectionStrings__Ticketing: "User Id=ticketing;Password=ticketing;Data Source=oracle:1521/FREEPDB1"
+      # The database starts empty, so the app applies its own schema and seed data.
+      Ticketing__ApplyMigrationsOnStartup: "true"
+      ASPNETCORE_ENVIRONMENT: Production
+    depends_on:
+      oracle:
+        condition: service_healthy
 
 volumes:
   oracle-data:
