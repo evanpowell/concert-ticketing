@@ -13,6 +13,10 @@ builder.Services.AddDbContext<TicketingDbContext>(options =>
 
 builder.Services.AddScoped<HoldService>();
 builder.Services.AddHostedService<ExpiredHoldSweeper>();
+
+// Only the public demo resets itself. Never enable this anywhere real.
+if (builder.Configuration.GetValue<bool>("Ticketing:DemoResetEnabled"))
+    builder.Services.AddHostedService<DemoResetService>();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
