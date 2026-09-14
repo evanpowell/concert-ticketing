@@ -1,0 +1,48 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+
+  api:
+    image: ${API_IMAGE:-ghcr.io/evanpowell/ticketing-api:latest}
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Ticketing: "User Id=ticketing;Password=${ORACLE_APP_PASSWORD};Data Source=oracle:1521/FREEPDB1"
+      Ticketing__ApplyMigrationsOnStartup: "true"
+      Ticketing__DemoResetEnabled: "true"
+      ASPNETCORE_ENVIRONMENT: Production
+    depends_on:
+      oracle:
+        condition: service_healthy
+
+  oracle:
+    image: gvenzl/oracle-free:23-slim-faststart
+    restart: unless-stopped
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_SYS_PASSWORD}
+      APP_USER: ticketing
+      APP_USER_PASSWORD: ${ORACLE_APP_PASSWORD}
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+volumes:
+  caddy-data:
+  caddy-config:
+  oracle-data:
