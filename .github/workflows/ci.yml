@@ -1,0 +1,82 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API tests (real Oracle)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # The integration tests start Oracle via Testcontainers. Pulling it as an
+      # explicit step keeps the several-minute image download out of the test
+      # timing, so a slow pull reads as a slow pull rather than a slow test.
+      - name: Pull Oracle image
+        run: docker pull gvenzl/oracle-free:23-slim-faststart
+
+      - name: Test
+        run: dotnet test api/Ticketing.slnx --logger "console;verbosity=normal"
+
+  web:
+    name: Web build and tests
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  image:
+    name: Build and publish image
+    needs: [api, web]
+    if: github.ref == 'refs/heads/main'
+    # Arm runner so the image is built natively for the Ampere A1 target,
+    # with no QEMU emulation.
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/ticketing-api:latest
+            ghcr.io/${{ github.repository_owner }}/ticketing-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # A deploy job belongs here once a VM exists. It is deliberately absent rather
+  # than present-and-skipped: a workflow that always shows a skipped deploy step
+  # is harder to read than one that gains the step when it becomes real.

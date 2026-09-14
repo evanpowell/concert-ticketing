@@ -1,5 +1,7 @@
 # The Chapel — Concert Ticketing
 
+[![ci](https://github.com/evanpowell/concert-ticketing/actions/workflows/ci.yml/badge.svg)](https://github.com/evanpowell/concert-ticketing/actions/workflows/ci.yml)
+
 A seat-booking application built on **Angular · ASP.NET Core · Oracle**, written to
 solve one problem properly: two people clicking the same seat at the same instant.
 
