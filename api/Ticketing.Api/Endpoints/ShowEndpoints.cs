@@ -13,14 +13,14 @@ public static class ShowEndpoints
         group.MapGet("/", async (TicketingDbContext db, CancellationToken ct) =>
             await db.Shows
                 .OrderBy(s => s.StartsAt)
-                .Select(s => new ShowSummary(s.ShowId, s.Title, s.Artist, s.StartsAt, s.Venue.Name))
+                .Select(s => new ShowSummary(s.ShowId, s.Title, s.Artist, s.StartsAt, s.Venue.Name, s.Venue.TimeZone))
                 .ToListAsync(ct));
 
         group.MapGet("/{showId:int}", async (int showId, TicketingDbContext db, CancellationToken ct) =>
         {
             var show = await db.Shows
                 .Where(s => s.ShowId == showId)
-                .Select(s => new ShowSummary(s.ShowId, s.Title, s.Artist, s.StartsAt, s.Venue.Name))
+                .Select(s => new ShowSummary(s.ShowId, s.Title, s.Artist, s.StartsAt, s.Venue.Name, s.Venue.TimeZone))
                 .FirstOrDefaultAsync(ct);
 
             return show is null

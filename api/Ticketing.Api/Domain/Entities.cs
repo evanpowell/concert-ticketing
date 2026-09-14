@@ -5,6 +5,9 @@ public class Venue
     public int VenueId { get; set; }
     public string Name { get; set; } = "";
     public string City { get; set; } = "";
+
+    /// <summary>IANA zone, e.g. "America/Los_Angeles". Display only.</summary>
+    public string TimeZone { get; set; } = "UTC";
 }
 
 public class Seat

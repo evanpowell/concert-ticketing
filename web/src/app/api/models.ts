@@ -4,8 +4,11 @@ export interface ShowSummary {
   showId: number;
   title: string;
   artist: string;
+  /** ISO instant. Correct globally; not meaningful to display without a zone. */
   startsAt: string;
   venueName: string;
+  /** IANA zone of the venue, e.g. "America/Los_Angeles". */
+  venueTimeZone: string;
 }
 
 export interface SeatView {

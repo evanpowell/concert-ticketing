@@ -12,7 +12,7 @@
           <span class="artist">{{ show.artist }}</span>
           <span class="title">{{ show.title }}</span>
           <span class="meta">
-            {{ show.startsAt | date: 'EEE d MMM, h:mm a' }} · {{ show.venueName }}
+            {{ showTime(show) }} · {{ show.venueName }}
           </span>
         </a>
       </li>

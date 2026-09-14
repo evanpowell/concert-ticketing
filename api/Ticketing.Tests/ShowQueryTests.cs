@@ -17,6 +17,9 @@ public class ShowQueryTests(OracleFixture oracle)
         Assert.NotNull(shows);
         Assert.Equal(3, shows!.Count);
         Assert.Contains(shows, s => s.Artist == "Lankum");
+        // A show time belongs to the venue, not the viewer. The client needs the
+        // venue's IANA zone to render "8:00 PM" the same way everywhere on earth.
+        Assert.All(shows, s => Assert.Equal("America/Los_Angeles", s.VenueTimeZone));
     }
 
     [Fact]
@@ -63,6 +66,6 @@ public class ShowQueryTests(OracleFixture oracle)
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    public record ShowSummaryDto(int ShowId, string Title, string Artist, DateTimeOffset StartsAt, string VenueName);
+    public record ShowSummaryDto(int ShowId, string Title, string Artist, DateTimeOffset StartsAt, string VenueName, string VenueTimeZone);
     public record SeatDto(int ShowSeatId, int SeatId, string Section, string RowLabel, int SeatNumber, string Status, int PriceCents);
 }

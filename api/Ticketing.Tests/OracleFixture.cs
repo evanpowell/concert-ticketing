@@ -26,6 +26,8 @@ public sealed class OracleFixture : IAsyncLifetime
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
     /// <summary>Test-only concern: locate db/migrations by walking up from the test binary.</summary>
+    public static string MigrationsDirectory => FindMigrationsDirectory();
+
     private static string FindMigrationsDirectory()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

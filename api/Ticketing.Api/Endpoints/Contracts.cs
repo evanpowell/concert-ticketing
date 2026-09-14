@@ -1,6 +1,6 @@
 namespace Ticketing.Api.Endpoints;
 
-public record ShowSummary(int ShowId, string Title, string Artist, DateTimeOffset StartsAt, string VenueName);
+public record ShowSummary(int ShowId, string Title, string Artist, DateTimeOffset StartsAt, string VenueName, string VenueTimeZone);
 
 public record SeatView(int ShowSeatId, int SeatId, string Section, string RowLabel, int SeatNumber, string Status, int PriceCents);
 

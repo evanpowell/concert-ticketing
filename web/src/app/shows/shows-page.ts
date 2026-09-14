@@ -1,12 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TicketingApi } from '../api/ticketing-api';
 import { ShowSummary } from '../api/models';
+import { formatInVenueTime } from '../api/venue-time';
 
 @Component({
   selector: 'app-shows-page',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink],
   templateUrl: './shows-page.html',
   styleUrl: './shows-page.css',
 })
@@ -29,5 +29,9 @@ export class ShowsPage {
         this.loading.set(false);
       },
     });
+  }
+
+  protected showTime(show: ShowSummary): string {
+    return formatInVenueTime(show.startsAt, show.venueTimeZone);
   }
 }

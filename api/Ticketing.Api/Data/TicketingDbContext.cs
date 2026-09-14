@@ -33,6 +33,7 @@ public class TicketingDbContext(DbContextOptions<TicketingDbContext> options) : 
             e.Property(x => x.VenueId).HasColumnName("VENUE_ID").ValueGeneratedOnAdd();
             e.Property(x => x.Name).HasColumnName("NAME");
             e.Property(x => x.City).HasColumnName("CITY");
+            e.Property(x => x.TimeZone).HasColumnName("TIME_ZONE");
         });
 
         b.Entity<Seat>(e =>
